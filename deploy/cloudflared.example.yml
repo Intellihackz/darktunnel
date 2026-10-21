@@ -1,0 +1,11 @@
+# Copy to deploy/cloudflared.yml and fill in the two values marked FILL IN.
+# Both names go to the same local server; it tells them apart by the Host header.
+tunnel: FILL IN the tunnel UUID printed by `cloudflared tunnel create darktunnel`
+credentials-file: FILL IN /Users/YOU/.cloudflared/THE-UUID.json
+
+ingress:
+  - hostname: darktunnel.lol
+    service: http://localhost:8787
+  - hostname: go.darktunnel.lol
+    service: http://localhost:8787
+  - service: http_status:404

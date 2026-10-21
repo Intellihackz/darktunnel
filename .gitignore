@@ -7,3 +7,4 @@ dist
 .shots-app
 public/scramjet
 public/baremux
+deploy/cloudflared.yml
