@@ -41,7 +41,7 @@ const hostOf = (u: string) => {
 };
 const title = (t: Tab) => (t.target?.ok ? t.target.host : "New tab");
 
-export function AppPage() {
+function AppBody() {
   const [tabs, setTabs] = useState<Tab[]>([blank(1)]);
   const [activeId, setActiveId] = useState(1);
   const [note, setNote] = useState("");
@@ -561,6 +561,37 @@ function Prompt({ p, onDecide }: { p: Pending; onDecide: (p: Pending, ok: boolea
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+// The app is for desktop browsers: it needs room for the window and a keyboard for the address bar.
+// The choice is made once, when the page opens. Resizing later never throws a wallet away.
+export function AppPage() {
+  const [mode, setMode] = useState<"check" | "app" | "gate">("check");
+  useEffect(() => {
+    setMode(matchMedia("(min-width: 900px) and (hover: hover) and (pointer: fine)").matches ? "app" : "gate");
+  }, []);
+  if (mode === "app") return <AppBody />;
+  return (
+    <div className="gate">
+      <a className="brand" href="/" aria-label="Dark Tunnel, home">
+        <Mark />
+        <span className="u">dark tunnel</span>
+      </a>
+      {mode === "gate" && (
+        <main id="main" className="gate-body">
+          <h1>The app is for desktop browsers.</h1>
+          <p>
+            Dark Tunnel opens sites in a window that needs a large screen and a keyboard. Open this address on a computer, or make this window wider.
+          </p>
+          <div className="gate-actions">
+            <a className="btn" href="/">
+              <span>Back to the site</span>
+            </a>
+          </div>
+        </main>
+      )}
     </div>
   );
 }

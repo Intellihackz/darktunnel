@@ -1,5 +1,3 @@
-import { site } from "./data/site";
-
 export function Mark({ size = 24 }: { size?: number }) {
   return (
     <svg viewBox="0 0 64 64" width={size} height={size} aria-hidden="true" className="mark">
@@ -16,9 +14,9 @@ export function Frame({ home }: { home: boolean }) {
         <Mark />
         <span className="u">dark tunnel</span>
       </a>
-      <span className="chip" role="status">
-        <i aria-hidden="true" /> {site.status}
-      </span>
+      <a className="chip chip-link" href="/app">
+        <i aria-hidden="true" /> Open the app
+      </a>
     </header>
   );
 }

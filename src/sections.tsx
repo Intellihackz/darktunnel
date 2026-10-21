@@ -28,10 +28,10 @@ export function Hero() {
           </h1>
           <p className="lede">{hero.lede}</p>
           <div className="actions" data-actions>
-            <a className="btn" href="#route">
+            <a className="btn" href="/app">
               <span>{hero.cta}</span>
             </a>
-            <a className="u" href="#ghost">
+            <a className="u" href="#route">
               {hero.link}
             </a>
           </div>
@@ -163,6 +163,9 @@ export function Ghost() {
             <span>{ghost.title}</span>
           </h2>
           <p>{ghost.body}</p>
+          <a className="btn g-cta" href="/app">
+            <span>{ghost.cta}</span>
+          </a>
         </div>
         <figure className="gcard">
           <figcaption>
@@ -232,6 +235,11 @@ export function Ways() {
                 </div>
               ))}
             </dl>
+            {d.action && (
+              <a className="btn d-cta" href={d.action.href}>
+                <span>{d.action.label}</span>
+              </a>
+            )}
           </article>
         ))}
       </div>
