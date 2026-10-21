@@ -1,0 +1,7 @@
+# Both names go to the same app. The app tells them apart by the Host header, which Caddy passes through.
+darktunnel.lol, go.darktunnel.lol {
+	encode zstd gzip
+	reverse_proxy app:8080 {
+		flush_interval -1
+	}
+}
