@@ -1,0 +1,41 @@
+{
+  "name": "darktunnel",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "npm run assets && tsc --noEmit && vite build && node scripts/prerender.mjs",
+    "preview": "vite preview",
+    "assets": "node scripts/copy-proxy-assets.mjs",
+    "typecheck:server": "tsc --noEmit -p server/tsconfig.json",
+    "start": "tsx server/index.ts",
+    "serve": "npm run build && npm run start"
+  },
+  "dependencies": {
+    "@fontsource-variable/archivo": "^5.3.0",
+    "@fontsource-variable/martian-mono": "^5.3.0",
+    "@hono/node-server": "^2.1.5",
+    "@mercuryworkshop/bare-mux": "^2.1.9",
+    "@mercuryworkshop/scramjet": "^1.1.0",
+    "gsap": "^3.15.0",
+    "hono": "^4.13.13",
+    "lenis": "^1.3.27",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "undici": "^8.12.3",
+    "viem": "^2.57.8",
+    "ws": "^8.22.0",
+    "tsx": "^4.23.15"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/ws": "^8.18.2",
+    "@vitejs/plugin-react": "^6.1.2",
+    "axe-core": "^4.14.0",
+    "playwright": "^1.64.1",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4"
+  }
+}

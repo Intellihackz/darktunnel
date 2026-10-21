@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      @font-face {
+        font-family: "Archivo";
+        src: url("../node_modules/@fontsource-variable/archivo/files/archivo-latin-wdth-normal.woff2") format("woff2");
+        font-weight: 100 900;
+        font-stretch: 62% 125%;
+      }
+      @font-face {
+        font-family: "Martian";
+        src: url("../node_modules/@fontsource-variable/martian-mono/files/martian-mono-latin-wdth-normal.woff2") format("woff2");
+        font-weight: 100 800;
+      }
+      * { box-sizing: border-box; margin: 0; }
+      body { width: 1200px; height: 630px; background: #09090a; color: #ecebe6; font-family: "Archivo", sans-serif; position: relative; overflow: hidden; }
+      .l { position: absolute; left: 64px; top: 64px; }
+      .brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 22px; }
+      h1 { margin-top: 44px; font-size: 106px; line-height: 0.9; font-weight: 800; font-variation-settings: "wdth" 62; letter-spacing: -0.005em; }
+      h1 span { display: block; }
+      .foot { position: absolute; left: 64px; bottom: 56px; font: 400 15px "Martian", monospace; color: #8f8e88; }
+      .d { position: absolute; left: 690px; top: 64px; width: 446px; border: 1px solid #34343a; background: #101012; font: 400 14px "Martian", monospace; }
+      .h { display: flex; justify-content: space-between; padding: 14px 18px; color: #8f8e88; font-size: 12px; border-bottom: 1px solid #232327; }
+      .g { padding: 11px 18px; background: rgba(236,235,230,.03); color: #8f8e88; font-size: 11px; letter-spacing: .05em; text-transform: uppercase; border-bottom: 1px solid #232327; }
+      .r { display: grid; grid-template-columns: 124px 1fr auto; align-items: center; padding: 13px 18px; border-bottom: 1px solid #232327; }
+      .r b { font-weight: 400; color: #8f8e88; }
+      .v { position: relative; display: block; }
+      .v i { position: absolute; left: -8px; top: 50%; translate: 0 -50%; height: 28px; width: calc(100% - 8px); background: #ecebe6; }
+      .t { font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase; padding: 4px 8px; border: 1px solid #34343a; color: #bdbcb6; }
+      .t.h2 { background: #ecebe6; border-color: #ecebe6; color: #09090a; }
+      .t.n { border-color: #ecebe6; color: #ecebe6; }
+      .v2 { position: relative; display: block; }
+      .v2 i { position: absolute; left: -8px; top: 50%; translate: 0 -50%; height: 28px; width: 96%; background: #ecebe6; }
+        .s { padding: 16px 18px; font: 600 16px "Archivo", sans-serif; }
+    </style>
+  </head>
+  <body>
+    <div class="l">
+      <div class="brand">
+        <svg viewBox="0 0 64 64" width="30" height="30"><rect x="14" y="10" width="36" height="44" fill="none" stroke="#ecebe6" stroke-width="4"/><rect x="14" y="26" width="36" height="12" fill="#ecebe6"/></svg>
+        dark tunnel
+      </div>
+      <h1><span>Apps see</span><span>the tunnel.</span><span>Not your</span><span>connection.</span></h1>
+    </div>
+    <div class="foot">Web3 apps over Tor, with a ghost wallet. In build.</div>
+    <div class="d">
+      <div class="h"><span>File 0001</span><span>You, as an app sees you</span></div>
+      <div class="g">From your connection</div>
+      <div class="r"><b>IP address</b><span class="v">203.0.113.42<i></i></span><span class="t h2">Hidden</span></div>
+      <div class="r"><b>Location</b><span class="v">Your city<i></i></span><span class="t h2">Hidden</span></div>
+      <div class="r"><b>Network</b><span class="v">Your provider<i></i></span><span class="t h2">Hidden</span></div>
+      <div class="r"><b>RPC node</b><span class="v">Sees your IP<i></i></span><span class="t h2">Hidden</span></div>
+      <div class="g">From your wallet</div>
+      <div class="r"><b>Main wallet</b><span class="v">0x7a3f…91c2<i></i></span><span class="t h2">Hidden</span></div>
+    </div>
+  </body>
+</html>
