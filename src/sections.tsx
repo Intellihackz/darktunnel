@@ -260,7 +260,7 @@ export function Footer() {
             Ghost wallet
           </a>
           <a className="u" href="/app">
-            Open the app
+            Start a session
           </a>
         </nav>
       </div>

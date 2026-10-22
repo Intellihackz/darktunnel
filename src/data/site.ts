@@ -36,7 +36,7 @@ export const dossier: { head: string; sub: string; groups: Group[] } = {
 export const hero = {
   h1: ["Apps see the tunnel.", "Not your connection."],
   lede: "Dark Tunnel opens any web3 app for you over Tor, and signs with a ghost wallet that was never yours. Scroll to ride the route.",
-  cta: "Open the app",
+  cta: "Start a session",
   link: "Ride the route",
 };
 
@@ -74,7 +74,7 @@ export const route = {
 };
 
 export const ghost = {
-  cta: "Use it in the app",
+  cta: "Start a session",
   title: "A wallet that was never yours.",
   body: "Each session makes a new wallet in your browser and shows you its key once, with a warning. We never receive it, so your main wallet never has to meet the app.",
   card: {
@@ -122,7 +122,7 @@ export const ways = {
         ["Ghost wallet", "Yes"],
         ["Good for", "A quick throwaway wallet"],
       ],
-      action: { label: "Open the app", href: "/app" } as { label: string; href: string } | null,
+      action: { label: "Start a session", href: "/app" } as { label: string; href: string } | null,
     },
   ],
 };

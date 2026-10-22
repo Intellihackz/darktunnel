@@ -15,7 +15,7 @@ export function Frame({ home }: { home: boolean }) {
         <span className="u">dark tunnel</span>
       </a>
       <a className="chip chip-link" href="/app">
-        <i aria-hidden="true" /> Open the app
+        <i aria-hidden="true" /> Start a session
       </a>
     </header>
   );
