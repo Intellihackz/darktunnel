@@ -9,6 +9,8 @@ export const site = {
   onion: "kezokunwtqchshavys3psubvrpc6s2j2adwsrawihjx333mtszzw54ad.onion",
   onionUrl: "http://kezokunwtqchshavys3psubvrpc6s2j2adwsrawihjx333mtszzw54ad.onion",
   year: 2026,
+  x: "https://x.com/_darktunnel",
+  ca: "0xffe349082eb373e92857b113f21690e881963001",
 };
 
 export type Row = { key: string; label: string; value: string; at: number };

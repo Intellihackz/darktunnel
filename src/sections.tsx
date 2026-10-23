@@ -247,6 +247,31 @@ export function Ways() {
   );
 }
 
+function Contract() {
+  const [note, setNote] = useState("");
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(site.ca);
+      setNote("Copied");
+    } catch {
+      setNote("Select it by hand");
+    }
+    setTimeout(() => setNote(""), 2000);
+  };
+  return (
+    <p className="ca">
+      <span className="ca-k">CA</span>
+      <code>{site.ca}</code>
+      <button className="u" type="button" onClick={copy}>
+        Copy
+      </button>
+      <span className="ca-n" role="status" aria-live="polite">
+        {note}
+      </span>
+    </p>
+  );
+}
+
 export function Footer() {
   return (
     <footer className="foot">
@@ -262,7 +287,11 @@ export function Footer() {
           <a className="u" href="/app">
             Start a session
           </a>
+          <a className="u" href={site.x} target="_blank" rel="noopener noreferrer">
+            X
+          </a>
         </nav>
+        <Contract />
       </div>
       <a className="wm" href="#top" aria-label="Dark Tunnel, back to top">
         <span>dark tunnel</span>
