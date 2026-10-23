@@ -22,6 +22,46 @@ window.__dtOn = (fn) => subscribers.add(fn);
 // A page in the tunnel asked for a new tab. The app decides whether to open one.
 window.__dtOpen = (url) => typeof url === "string" && url.length < 4096 && tell({ type: "open", url });
 
+// A page's icon, fetched through the relay and handed up as a small data address. Images only, small, a few redirects.
+const IMAGE_TYPES = /^image\/(png|jpeg|gif|webp|svg\+xml|x-icon|vnd\.microsoft\.icon)/i;
+const unb64json = (t) => JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(t), (c) => c.charCodeAt(0))));
+window.__dtIcon = async (start, page) => {
+  try {
+    let url = start;
+    for (let hop = 0; hop < 4; hop++) {
+      if (typeof url !== "string" || !/^https:\/\//i.test(url) || url.length > 2048) return;
+      const res = await fetch("/_dt/request", {
+        method: "POST",
+        headers: { "x-dt-url": url, "x-dt-method": "GET", "x-dt-headers": b64json({ accept: "image/*" }) },
+        cache: "no-store",
+        credentials: "omit",
+      });
+      if (res.headers.get("x-dt-error")) return;
+      const status = Number(res.headers.get("x-dt-status"));
+      const headers = unb64json(res.headers.get("x-dt-headers") ?? "e30=");
+      if (status >= 300 && status < 400 && headers.location) {
+        url = new URL(String(headers.location), url).href;
+        continue;
+      }
+      if (status !== 200) return;
+      const bytes = await res.arrayBuffer();
+      if (bytes.byteLength === 0 || bytes.byteLength > 120_000) return;
+      let type = String(headers["content-type"] ?? "").split(";")[0].trim();
+      if (!type && /\.ico(\?|$)/i.test(url)) type = "image/x-icon";
+      if (!IMAGE_TYPES.test(type)) return;
+      const data = await new Promise((ok) => {
+        const r = new FileReader();
+        r.onload = () => ok(String(r.result));
+        r.readAsDataURL(new Blob([bytes], { type }));
+      });
+      tell({ type: "icon", data, page: typeof page === "string" ? page.slice(0, 2048) : "" });
+      return;
+    }
+  } catch {
+    /* no icon */
+  }
+};
+
 // JSON-RPC to a chain node, sent through the same relay as everything else, so the node never sees the visitor.
 const b64json = (v) => {
   let s = "";

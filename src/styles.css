@@ -1218,6 +1218,20 @@ html.is-app .field {
   border-radius: 10px;
   font: 500 13px var(--f-data);
 }
+.fav.has-icon {
+  border-color: transparent;
+  background: var(--ink);
+}
+.fav.has-icon.tone-light {
+  border-color: var(--line-2);
+  background: #1b1b1f;
+}
+.fav img {
+  display: block;
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
 .tab-t {
   display: flex;
   flex-direction: column;

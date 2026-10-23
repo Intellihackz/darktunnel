@@ -8,12 +8,14 @@
   let bridge = null;
   let on = null;
   let openTab = null;
+  let sendIcon = null;
   try {
     for (let w = window; w.parent && w.parent !== w; w = w.parent) {
       if (typeof w.parent.__dtBridge === "function") {
         bridge = w.parent.__dtBridge;
         on = w.parent.__dtOn;
         openTab = w.parent.__dtOpen;
+        sendIcon = w.parent.__dtIcon;
         break;
       }
     }
@@ -57,6 +59,39 @@
     };
     document.addEventListener("click", onLink, true);
     document.addEventListener("auxclick", onLink, true);
+  }
+
+  // The tab's icon. The page names it; the tunnel window fetches it through the relay, so the site never sees the visitor.
+  if (typeof sendIcon === "function") {
+    const realUrl = (u) => {
+      const m = /\/~\/s\/([^?#]+(?:\?[^#]*)?)/.exec(String(u));
+      try {
+        return m ? decodeURIComponent(m[1]) : String(u);
+      } catch {
+        return "";
+      }
+    };
+    let last = "";
+    const report = () => {
+      try {
+        const links = [...document.querySelectorAll('link[rel~="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"]')];
+        const pick = links.find((l) => /(^|\s)icon(\s|$)/i.test(l.getAttribute("rel") || "")) || links[0];
+        let target = pick ? realUrl(pick.href) : "";
+        if (!/^https:\/\//i.test(target)) {
+          const page = realUrl(location.href);
+          target = /^https:\/\//i.test(page) ? new URL("/favicon.ico", page).href : "";
+        }
+        if (target && target !== last) {
+          last = target;
+          sendIcon(target, realUrl(location.href));
+        }
+      } catch {
+        /* an icon is a nicety */
+      }
+    };
+    document.addEventListener("DOMContentLoaded", report);
+    window.addEventListener("load", report);
+    setTimeout(report, 2500);
   }
 
   const handlers = {};

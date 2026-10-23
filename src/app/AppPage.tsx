@@ -26,13 +26,43 @@ type Tab = {
   balance: string | null;
   loading: boolean;
   pending: string | null; // an address to open as soon as this tab's tunnel window is ready
+  icon: string | null; // the page's icon as a data address, fetched through the tunnel
+  iconTone: "light" | "dark"; // is the icon light or dark, so its tile can be the opposite
+  iconHost: string; // the site the icon belongs to, so it is never shown on another site's tab
 };
 type Pending = Approval & { id: number; tabId: number; host: string; resolve: (ok: boolean) => void };
 
 const SCENE = sceneMarkup();
 const now = () => new Date().toTimeString().slice(0, 8);
 const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
-const blank = (id: number): Tab => ({ id, ghost: null, target: null, input: "", lifted: false, log: [], tunnel: "none", opened: false, chainId: 1, connected: [], url: "", balance: null, loading: false, pending: null });
+const blank = (id: number): Tab => ({ id, ghost: null, target: null, input: "", lifted: false, log: [], tunnel: "none", opened: false, chainId: 1, connected: [], url: "", balance: null, loading: false, pending: null, icon: null, iconTone: "dark", iconHost: "" });
+/** Whether an icon is mostly light or mostly dark, so it can sit on a tile that shows it. */
+function toneOf(src: string): Promise<"light" | "dark"> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const c = document.createElement("canvas");
+        c.width = c.height = 16;
+        const x = c.getContext("2d")!;
+        x.drawImage(img, 0, 0, 16, 16);
+        const d = x.getImageData(0, 0, 16, 16).data;
+        let sum = 0;
+        let n = 0;
+        for (let i = 0; i < d.length; i += 4) {
+          if (d[i + 3] < 40) continue;
+          sum += (0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]) / 255;
+          n++;
+        }
+        resolve(n && sum / n > 0.6 ? "light" : "dark");
+      } catch {
+        resolve("dark");
+      }
+    };
+    img.onerror = () => resolve("dark");
+    img.src = src;
+  });
+}
 const hostOf = (u: string) => {
   try {
     return new URL(u).host;
@@ -40,6 +70,7 @@ const hostOf = (u: string) => {
     return "this site";
   }
 };
+const showIcon = (t: Tab) => !!t.icon && (!t.url || hostOf(t.url) === t.iconHost);
 const title = (t: Tab) => (t.target?.ok ? t.target.host : "New tab");
 
 function AppBody() {
@@ -162,6 +193,13 @@ function AppBody() {
       } else if (m.type === "url" && typeof m.url === "string") {
         const t = parseTarget(m.url);
         patch(id, (x) => ({ ...x, input: m.url!, url: m.url!, target: t.ok ? t : x.target }));
+      } else if (m.type === "icon" && typeof (m as { data?: unknown }).data === "string") {
+        const data = (m as { data: string }).data;
+        const iconHost = hostOf(String((m as { page?: unknown }).page ?? ""));
+        if (/^data:image\/(png|jpeg|gif|webp|svg\+xml|x-icon|vnd\.microsoft\.icon)[;,]/i.test(data) && data.length < 200_000) {
+          patch(id, (x) => ({ ...x, icon: data, iconHost }));
+          toneOf(data).then((tone) => patch(id, (x) => (x.icon === data ? { ...x, iconTone: tone } : x)));
+        }
       } else if (m.type === "open" && typeof m.url === "string") {
         const t = parseTarget(m.url);
         const from = tabsRef.current.find((x) => x.id === id);
@@ -260,7 +298,11 @@ function AppBody() {
     patch(tab.id, (x) => ({ ...x, target: t }));
     if (!t.ok) return say(tab.id, `Address refused: ${t.reason}`);
     say(tab.id, `Address checked: ${t.host}${t.listed ? " (on the first allowlist)" : " (not on the allowlist)"}`);
-    if (tab.tunnel !== "live") return say(tab.id, tab.tunnel === "starting" ? "Tunnel window is still starting" : "Tunnel is offline. Nothing was sent");
+    if (tab.tunnel === "starting") {
+      patch(tab.id, (x) => ({ ...x, pending: t.url.href }));
+      return say(tab.id, "The tunnel window is still starting. It will open as soon as it is ready");
+    }
+    if (tab.tunnel !== "live") return say(tab.id, "Tunnel is offline. Nothing was sent");
     toFrame(tab.id, { type: "go", url: t.url.href });
     patch(tab.id, (x) => ({ ...x, opened: true, loading: true }));
     say(tab.id, `Opening ${t.host} through the tunnel`);
@@ -306,8 +348,8 @@ function AppBody() {
             {tabs.map((t) => (
               <li key={t.id} className={t.id === tab.id ? "is-active" : ""}>
                 <button className="tab" aria-current={t.id === tab.id ? "true" : undefined} onClick={() => setActiveId(t.id)}>
-                  <span className="fav" aria-hidden="true">
-                    {t.target?.ok ? t.target.host[0].toUpperCase() : "+"}
+                  <span className={"fav" + (showIcon(t) ? ` has-icon tone-${t.iconTone}` : "")} aria-hidden="true">
+                    {showIcon(t) ? <img src={t.icon!} alt="" width={20} height={20} /> : t.target?.ok ? t.target.host[0].toUpperCase() : "+"}
                   </span>
                   <span className="tab-t">
                     <b>{title(t)}</b>

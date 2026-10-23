@@ -34,8 +34,8 @@ export const dossier: { head: string; sub: string; groups: Group[] } = {
 };
 
 export const hero = {
-  h1: ["Apps see the tunnel.", "Not your connection."],
-  lede: "Dark Tunnel opens any web3 app for you over Tor, and signs with a ghost wallet that was never yours. Scroll to ride the route.",
+  h1: ["A tunnel from", "the dark web to web3."],
+  lede: "Open any dapp over Tor with a throwaway ghost wallet. Apps see the tunnel, not your connection. Scroll to ride the route.",
   cta: "Start a session",
   link: "Ride the route",
 };
