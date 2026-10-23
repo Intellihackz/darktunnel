@@ -60,3 +60,17 @@ A public relay can be used to reach any public https site. What limits that toda
 ## Later
 
 Tor: two onion services (one per origin) pointing at this same server, with `APP_ORIGIN` and `PROXY_ORIGIN` set to the onion addresses.
+
+## Fly.io instead of Railway
+
+`fly.toml` runs the same Dockerfile on Fly. The window origin is the free `<app>.fly.dev` address, so only the app needs a custom domain. `fly.dev` is its own site to the browser, which keeps the sites you open further from the wallet than a subdomain would.
+
+```bash
+fly launch --no-deploy --copy-config   # keep the fly.toml in the repo; pick a free app name
+# if the name is not "darktunnel", change `app` and PROXY_ORIGIN in fly.toml to match
+fly deploy
+fly scale count 1                      # one machine: the limits live in memory
+fly certs add darktunnel.lol           # prints the DNS records for the app domain
+```
+
+`CLIENT_IP_HEADER = "fly-client-ip"` matters: Fly appends the visitor address to `X-Forwarded-For`, so the first entry there can be forged. The checks in step 4 are the same, with `<app>.fly.dev` in place of `go.darktunnel.lol`.

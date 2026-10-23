@@ -11,6 +11,8 @@ const PORT = Number(process.env.PORT ?? 8787);
 const APP_ORIGIN = (process.env.APP_ORIGIN ?? `http://localhost:${PORT}`).replace(/\/+$/, "");
 const PROXY_ORIGIN = (process.env.PROXY_ORIGIN ?? `http://127.0.0.1:${PORT}`).replace(/\/+$/, "");
 const TRUST_PROXY = process.env.TRUST_PROXY === "1";
+// which header holds the visitor address behind the host's proxy (Fly: fly-client-ip, since it appends to x-forwarded-for)
+const CLIENT_IP_HEADER = (process.env.CLIENT_IP_HEADER ?? "x-forwarded-for").toLowerCase();
 const appHost = new URL(APP_ORIGIN).host.toLowerCase();
 const proxyHost = new URL(PROXY_ORIGIN).host.toLowerCase();
 if (appHost === proxyHost) throw new Error("APP_ORIGIN and PROXY_ORIGIN must be different origins.");
@@ -51,7 +53,7 @@ app.get("/_dt/config", (c) => (c.get("side") === "app" ? c.json({ proxyOrigin: P
 app.post("/_dt/request", async (c: Context<Env>) => {
   if (c.get("side") !== "proxy" || c.req.header("origin") !== PROXY_ORIGIN) return c.text("Forbidden", 403);
   const remote = (c.env as { incoming?: { socket?: { remoteAddress?: string } } }).incoming?.socket?.remoteAddress;
-  return relayRequest(c.req.raw, clientOf(remote, c.req.header("x-forwarded-for")));
+  return relayRequest(c.req.raw, clientOf(remote, c.req.header(CLIENT_IP_HEADER)));
 });
 
 app.all("*", (c) => {
@@ -76,5 +78,5 @@ const server = serve({ fetch: app.fetch, port: PORT, hostname: process.env.HOST 
     return;
   }
   const remote = req.socket.remoteAddress;
-  relayUpgrade(req, socket, head, clientOf(remote, req.headers["x-forwarded-for"] as string | undefined));
+  relayUpgrade(req, socket, head, clientOf(remote, req.headers[CLIENT_IP_HEADER] as string | undefined));
 });
