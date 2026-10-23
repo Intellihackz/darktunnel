@@ -1,38 +1,40 @@
-# Dark Tunnel on Fly.io. Same Dockerfile as Railway.
-# Change `app` to the name you picked, and PROXY_ORIGIN to match it.
-app = "darktunnel"
-primary_region = "lhr"
+# fly.toml app configuration file generated for darktunnel on 2026-10-23T10:06:22Z
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'darktunnel'
+primary_region = 'ams'
 
 [build]
-  dockerfile = "Dockerfile"
+  dockerfile = 'Dockerfile'
 
 [env]
-  PORT = "8080"
-  APP_ORIGIN = "https://darktunnel.lol"
-  PROXY_ORIGIN = "https://darktunnel.fly.dev"
-  TRUST_PROXY = "1"
-  CLIENT_IP_HEADER = "fly-client-ip"
+  APP_ORIGIN = 'https://darktunnel.lol'
+  CLIENT_IP_HEADER = 'fly-client-ip'
+  PORT = '8080'
+  PROXY_ORIGIN = 'https://darktunnel.fly.dev'
+  TRUST_PROXY = '1'
 
 [http_service]
   internal_port = 8080
   force_https = true
-  # one machine, always on: the limits live in memory and the relay holds websockets open
-  auto_stop_machines = "off"
+  auto_stop_machines = 'off'
   auto_start_machines = true
   min_machines_running = 1
 
   [http_service.concurrency]
-    type = "connections"
-    soft_limit = 500
+    type = 'connections'
     hard_limit = 800
+    soft_limit = 500
 
   [[http_service.checks]]
-    method = "GET"
-    path = "/health"
-    interval = "15s"
-    timeout = "5s"
-    grace_period = "20s"
+    interval = '15s'
+    timeout = '5s'
+    grace_period = '20s'
+    method = 'GET'
+    path = '/health'
 
 [[vm]]
-  size = "shared-cpu-1x"
-  memory = "512mb"
+  size = 'shared-cpu-1x'
+  memory = '512mb'
