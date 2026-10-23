@@ -1,0 +1,28 @@
+# Dark Tunnel as an onion site: Tor next to the app, no public ports needed.
+#   docker compose -f deploy/docker-compose.onion.yml up -d --build
+#   docker compose -f deploy/docker-compose.onion.yml exec tor cat /var/lib/tor/app/hostname /var/lib/tor/window/hostname
+# BACK UP the tor_keys volume. Those keys are the addresses.
+services:
+  tor:
+    build:
+      context: ./onion
+      dockerfile: Dockerfile.tor
+    restart: unless-stopped
+    volumes:
+      - tor_keys:/var/lib/tor
+
+  app:
+    build: ..
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "/app/deploy/onion/entrypoint.sh"]
+    environment:
+      PORT: "8080"
+      ONION: "1"
+    volumes:
+      - tor_keys:/tor:ro
+      - ./onion/entrypoint.sh:/app/deploy/onion/entrypoint.sh:ro
+    depends_on:
+      - tor
+
+volumes:
+  tor_keys:

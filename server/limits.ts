@@ -39,9 +39,11 @@ const spent = new Map<string, { start: number; bytes: number }>();
 const HOUR = 3_600_000;
 const BUDGET = Number(process.env.MAX_BYTES_PER_HOUR ?? 3 * 1024 ** 3);
 
+// The onion site also has one budget for all visitors together (key "*"), because rotating window ids would otherwise dodge the per-window one.
+const GLOBAL_BUDGET = Number(process.env.MAX_BYTES_PER_HOUR_ALL ?? 40 * 1024 ** 3);
 export function overBudget(key: string): boolean {
   const e = spent.get(key);
-  return !!e && Date.now() - e.start < HOUR && e.bytes >= BUDGET;
+  return !!e && Date.now() - e.start < HOUR && e.bytes >= (key === "*" ? GLOBAL_BUDGET : BUDGET);
 }
 export function spend(key: string, bytes: number) {
   const now = Date.now();

@@ -6,7 +6,8 @@
 export const site = {
   name: "Dark Tunnel",
   status: "in build",
-  onion: "coming soon",
+  onion: "kezokunwtqchshavys3psubvrpc6s2j2adwsrawihjx333mtszzw54ad.onion",
+  onionUrl: "http://kezokunwtqchshavys3psubvrpc6s2j2adwsrawihjx333mtszzw54ad.onion",
   year: 2026,
 };
 
@@ -105,12 +106,12 @@ export const ways = {
       name: "Onion",
       lede: "Open it in Tor Browser. Your IP stays out of it, and Tor Browser flattens much of what your browser tells apps.",
       rows: [
-        ["Address", "Coming soon"],
+        ["Address", "kezokun…zzw54ad.onion"],
         ["Tunnel over Tor", "Yes"],
         ["Ghost wallet", "Yes"],
         ["Good for", "Keeping your IP out of it"],
       ],
-      action: null as { label: string; href: string } | null,
+      action: { label: "Open the onion site", href: site.onionUrl } as { label: string; href: string } | null,
     },
     {
       id: "surface",

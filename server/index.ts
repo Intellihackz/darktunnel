@@ -20,8 +20,12 @@ if (appHost === proxyHost) throw new Error("APP_ORIGIN and PROXY_ORIGIN must be 
 // What the proxy origin may serve. Everything else there is a 404.
 const proxyPaths = ["/p/", "/sw.js", "/scramjet/", "/baremux/", "/dt/", "/favicon.svg"];
 
+// Onion mode: Tor delivers every visitor from the same local address, so limits follow the tunnel window's random id.
+const ONION = process.env.ONION === "1";
+const SESSION = /^[a-f0-9]{32}$/;
 const forwarded = (v: string | undefined) => v?.split(",")[0]?.trim();
-const clientOf = (remote: string | undefined, header: string | undefined) => (TRUST_PROXY ? forwarded(header) : undefined) ?? remote ?? "unknown";
+const clientOf = (remote: string | undefined, header: string | undefined, session?: string | null) =>
+  ONION ? `t:${session && SESSION.test(session) ? session : "anon"}` : ((TRUST_PROXY ? forwarded(header) : undefined) ?? remote ?? "unknown");
 
 type Env = { Variables: { side: "app" | "proxy" } };
 const app = new Hono<Env>();
@@ -53,7 +57,7 @@ app.get("/_dt/config", (c) => (c.get("side") === "app" ? c.json({ proxyOrigin: P
 app.post("/_dt/request", async (c: Context<Env>) => {
   if (c.get("side") !== "proxy" || c.req.header("origin") !== PROXY_ORIGIN) return c.text("Forbidden", 403);
   const remote = (c.env as { incoming?: { socket?: { remoteAddress?: string } } }).incoming?.socket?.remoteAddress;
-  return relayRequest(c.req.raw, clientOf(remote, c.req.header(CLIENT_IP_HEADER)));
+  return relayRequest(c.req.raw, clientOf(remote, c.req.header(CLIENT_IP_HEADER), c.req.header("x-dt-session")));
 });
 
 app.all("*", (c) => {
@@ -78,5 +82,5 @@ const server = serve({ fetch: app.fetch, port: PORT, hostname: process.env.HOST 
     return;
   }
   const remote = req.socket.remoteAddress;
-  relayUpgrade(req, socket, head, clientOf(remote, req.headers[CLIENT_IP_HEADER] as string | undefined));
+  relayUpgrade(req, socket, head, clientOf(remote, req.headers[CLIENT_IP_HEADER] as string | undefined, new URL(req.url ?? "/", "http://relay").searchParams.get("s")));
 });

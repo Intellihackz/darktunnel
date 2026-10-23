@@ -57,7 +57,7 @@ export function Hero() {
         </div>
 
         <p className="onion-note">
-          Onion address: <b>{site.onion}</b>
+          Onion address: <b className="onion-addr">{site.onion}</b>
         </p>
         <p className="cue" aria-hidden="true">
           Scroll to ride

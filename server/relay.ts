@@ -33,11 +33,13 @@ function why(error: unknown): string {
   return "could not reach the host";
 }
 
+const ONION = process.env.ONION === "1";
+
 export async function relayRequest(req: Request, client: string): Promise<Response> {
   const fail = (reason: string, status = 200) =>
     new Response(null, { status, headers: { "x-dt-error": reason, "cache-control": "no-store" } });
 
-  if (overBudget(client)) return fail("hourly data limit reached", 429);
+  if (overBudget(client) || (ONION && overBudget("*"))) return fail("hourly data limit reached", 429);
   const release = take(client, 4000, 100);
   if (!release) return fail("slow down", 429);
   const done = (r: Response) => (release(), r);
@@ -93,6 +95,7 @@ export async function relayRequest(req: Request, client: string): Promise<Respon
       transform(chunk, control) {
         sent += chunk.byteLength;
         spend(client, chunk.byteLength);
+        if (ONION) spend("*", chunk.byteLength);
         if (sent > MAX_RESPONSE) {
           control.error(new Error("response too large"));
           abort.abort();

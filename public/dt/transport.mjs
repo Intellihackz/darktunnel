@@ -9,6 +9,10 @@ const json64 = (value) => {
 };
 const unjson64 = (text) => JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(text), (c) => c.charCodeAt(0))));
 
+// One random id per tunnel window. On the onion site every visitor reaches the server from the same local address,
+// so the server limits each window by this id instead of by address. It is never tied to a person.
+const session = Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, "0")).join("");
+
 export default class DarkTunnelTransport {
   ready = false;
 
@@ -32,6 +36,7 @@ export default class DarkTunnelTransport {
     const res = await fetch(new URL("request", this.base), {
       method: "POST",
       headers: {
+        "x-dt-session": session,
         "x-dt-url": remote.href,
         "x-dt-method": method,
         "x-dt-headers": json64(headers ?? {}),
@@ -59,6 +64,7 @@ export default class DarkTunnelTransport {
   connect(url, protocols, requestHeaders, onopen, onmessage, onclose, onerror) {
     const ws = new URL("ws", this.base);
     ws.protocol = ws.protocol === "https:" ? "wss:" : "ws:";
+    ws.searchParams.set("s", session);
     ws.searchParams.set("url", url.href);
     ws.searchParams.set("protocols", JSON.stringify(protocols ?? []));
     ws.searchParams.set("h", json64(requestHeaders ?? {}));

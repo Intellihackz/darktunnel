@@ -1,0 +1,16 @@
+# Two onion services, one per origin, both pointing at the app container.
+# Keys live in /var/lib/tor, which is a volume: lose it and the addresses are gone for good.
+DataDirectory /var/lib/tor
+Log notice stdout
+SocksPort 0
+
+HiddenServiceDir /var/lib/tor/app
+HiddenServiceVersion 3
+HiddenServicePort 80 app:8080
+
+HiddenServiceDir /var/lib/tor/window
+HiddenServiceVersion 3
+HiddenServicePort 80 app:8080
+
+# Make each service cost a visitor-side puzzle when the server is under load.
+HiddenServicePoWDefensesEnabled 1
