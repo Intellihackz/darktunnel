@@ -25,13 +25,14 @@ type Tab = {
   url: string; // where the page in the tunnel window really is, as reported by the window
   balance: string | null;
   loading: boolean;
+  pending: string | null; // an address to open as soon as this tab's tunnel window is ready
 };
 type Pending = Approval & { id: number; tabId: number; host: string; resolve: (ok: boolean) => void };
 
 const SCENE = sceneMarkup();
 const now = () => new Date().toTimeString().slice(0, 8);
 const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
-const blank = (id: number): Tab => ({ id, ghost: null, target: null, input: "", lifted: false, log: [], tunnel: "none", opened: false, chainId: 1, connected: [], url: "", balance: null, loading: false });
+const blank = (id: number): Tab => ({ id, ghost: null, target: null, input: "", lifted: false, log: [], tunnel: "none", opened: false, chainId: 1, connected: [], url: "", balance: null, loading: false, pending: null });
 const hostOf = (u: string) => {
   try {
     return new URL(u).host;
@@ -56,7 +57,7 @@ function AppBody() {
   const approvalsRef = useRef<Pending[]>([]);
   approvalsRef.current = approvals;
   const rpcWait = useRef(new Map<number, { resolve: (v: unknown) => void; reject: (e: Error) => void }>());
-  const counters = useRef({ rpc: 0, approval: 0 });
+  const counters = useRef({ rpc: 0, approval: 0, lastOpen: 0 });
 
   const tabsRef = useRef(tabs);
   tabsRef.current = tabs;
@@ -151,14 +152,28 @@ function AppBody() {
       const m = (e.data ?? {}) as { type?: string; url?: string; message?: string; id?: number; payload?: { method?: unknown; params?: unknown }; json?: { result?: unknown; error?: { message?: string } }; error?: string };
       if (m.type === "loaded") patch(id, (t) => ({ ...t, loading: false }));
       else if (m.type === "ready") {
-        patch(id, (t) => ({ ...t, tunnel: "live" }));
+        const queued = tabsRef.current.find((t) => t.id === id)?.pending;
+        patch(id, (t) => ({ ...t, tunnel: "live", ...(queued ? { pending: null, opened: true, loading: true } : {}) }));
         say(id, "Tunnel window ready");
+        if (queued) frames.current.get(id)?.contentWindow?.postMessage({ type: "go", url: queued }, proxyOrigin);
       } else if (m.type === "error") {
         patch(id, (t) => ({ ...t, tunnel: "error" }));
         say(id, `Tunnel window failed: ${String(m.message ?? "unknown").slice(0, 120)}`);
       } else if (m.type === "url" && typeof m.url === "string") {
         const t = parseTarget(m.url);
         patch(id, (x) => ({ ...x, input: m.url!, url: m.url!, target: t.ok ? t : x.target }));
+      } else if (m.type === "open" && typeof m.url === "string") {
+        const t = parseTarget(m.url);
+        const from = tabsRef.current.find((x) => x.id === id);
+        const now = Date.now();
+        // a page cannot flood the app with tabs: a few at most, and not faster than one every two seconds
+        if (!t.ok || tabsRef.current.length >= 8 || now - counters.current.lastOpen < 2000) {
+          if (from) say(id, `A page asked to open ${t.ok ? t.host : "an address"} in a new tab. Not opened`);
+          return;
+        }
+        counters.current.lastOpen = now;
+        say(id, `Opened ${t.host} in a new tab`);
+        openTab(t.url.href, t);
       } else if (m.type === "rpc-result" && typeof m.id === "number") {
         const w = rpcWait.current.get(m.id);
         rpcWait.current.delete(m.id);
@@ -218,13 +233,13 @@ function AppBody() {
     if (el?.contentWindow && proxyOrigin) el.contentWindow.postMessage(message, proxyOrigin);
   };
 
-  const openTab = () => {
+  const openTab = (address?: string, checked?: Target) => {
     const id = nextId.current++;
-    setTabs((ts) => [...ts, { ...blank(id), tunnel: proxyOrigin ? "starting" : "none" }]);
+    setTabs((ts) => [...ts, { ...blank(id), tunnel: proxyOrigin ? "starting" : "none", input: address ?? "", target: checked ?? null, pending: address ?? null }]);
     setActiveId(id);
-    say(id, "Tab opened");
+    say(id, address ? `Tab opened from a link: ${checked?.ok ? checked.host : address}` : "Tab opened");
     giveWallet(id);
-    queueMicrotask(() => inputRef.current?.focus());
+    if (!address) queueMicrotask(() => inputRef.current?.focus());
   };
   const closeTab = (id: number) => {
     if (tabs.length === 1) return;
@@ -283,7 +298,7 @@ function AppBody() {
 
           <div className="side-h">
             <h2>Tabs</h2>
-            <button className="plus" onClick={openTab} aria-label="New tab">
+            <button className="plus" onClick={() => openTab()} aria-label="New tab">
               <span aria-hidden="true">+</span>
             </button>
           </div>

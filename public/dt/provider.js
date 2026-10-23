@@ -7,11 +7,13 @@
   // The tunnel window is the page's real parent, and it shares our origin, so it can be called directly.
   let bridge = null;
   let on = null;
+  let openTab = null;
   try {
     for (let w = window; w.parent && w.parent !== w; w = w.parent) {
       if (typeof w.parent.__dtBridge === "function") {
         bridge = w.parent.__dtBridge;
         on = w.parent.__dtOn;
+        openTab = w.parent.__dtOpen;
         break;
       }
     }
@@ -19,6 +21,43 @@
     /* a cross-origin frame in the way: no wallet here */
   }
   if (!bridge) return;
+
+  // New tabs. A link that asks for a new tab, or a script that calls window.open, would otherwise open a real browser
+  // tab on the tunnel window's own address, which has no tunnel behind it and loads nothing. Send those to the app,
+  // which opens them as a new tab of its own, with its own session.
+  if (typeof openTab === "function") {
+    // the page's address as the tunnel window knows it: proxied addresses end in /~/s/<encoded real address>
+    const real = (u) => {
+      const m = /\/~\/s\/([^?#]+)/.exec(String(u));
+      try {
+        return m ? decodeURIComponent(m[1]) : String(u);
+      } catch {
+        return null;
+      }
+    };
+    const stub = { closed: false, close() {}, focus() {}, blur() {}, postMessage() {}, location: { href: "" } };
+    const nativeOpen = window.open;
+    window.open = function (url) {
+      const target = url ? real(url) : null;
+      if (target && /^https:\/\//i.test(target)) {
+        openTab(target);
+        return stub;
+      }
+      return typeof nativeOpen === "function" ? nativeOpen.apply(this, arguments) : null;
+    };
+    const wantsNewTab = (e, a) => (a.target && !/^(_self|_top|_parent)$/i.test(a.target)) || e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1;
+    const onLink = (e) => {
+      const a = e.target && e.target.closest ? e.target.closest("a[href]") : null;
+      if (!a || e.defaultPrevented || (e.type === "auxclick" && e.button !== 1) || !wantsNewTab(e, a)) return;
+      const target = real(a.href);
+      if (!target || !/^https:\/\//i.test(target)) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      openTab(target);
+    };
+    document.addEventListener("click", onLink, true);
+    document.addEventListener("auxclick", onLink, true);
+  }
 
   const handlers = {};
   const emit = (event, data) => (handlers[event] ?? []).slice().forEach((fn) => { try { fn(data); } catch {} });

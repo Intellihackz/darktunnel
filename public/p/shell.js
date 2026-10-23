@@ -19,6 +19,8 @@ window.__dtBridge = (payload) =>
     setTimeout(() => pending.delete(id) && resolve({ error: { code: -32603, message: "The wallet did not answer in time" } }), 10 * 60 * 1000);
   });
 window.__dtOn = (fn) => subscribers.add(fn);
+// A page in the tunnel asked for a new tab. The app decides whether to open one.
+window.__dtOpen = (url) => typeof url === "string" && url.length < 4096 && tell({ type: "open", url });
 
 // JSON-RPC to a chain node, sent through the same relay as everything else, so the node never sees the visitor.
 const b64json = (v) => {
